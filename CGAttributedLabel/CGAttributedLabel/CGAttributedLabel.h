@@ -7,6 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+
+@interface LineModel :NSObject
+@property (nonatomic ,assign) NSRange range ;
+@property (nonatomic ,strong) UIColor *lineColor ;
+@property (nonatomic ,assign) CGRect delegateBounds ;
+@property (nonatomic ,assign) CGRect bgrunbouns ;
+@property (nonatomic ,assign) NSString *idfanier ;
+@end
+
 #define WXTEXTFONT [UIFont systemFontOfSize:20]
 #define RUNATTRIBUTE_BOTTOM_LINE_KEY @"RUNATTRIBUTE_BOTTOM_LINE"
 #define RUNATTRIBUTE_DELETE_LINE_KEY @"RUNATTRIBUTE_DELETE_LINE"
@@ -24,7 +33,6 @@
  设置替换self.tagString标签的数据源代理
  */
 - (id)replaceCharactersInWXAttributedLabel:(CGAttributedLabel *)attributedLabel index:(NSInteger)index ;
-- (NSArray <NSValue *>*)wxAttributedLabel:(CGAttributedLabel *)attributedLabel ;
 
 @end
 

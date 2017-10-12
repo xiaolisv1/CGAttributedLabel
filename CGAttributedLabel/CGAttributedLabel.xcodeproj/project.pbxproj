@@ -280,6 +280,7 @@
 				TargetAttributes = {
 					B12DB8961F54F58E0006315D = {
 						CreatedOnToolsVersion = 8.3.3;
+						DevelopmentTeam = J2B9KUWDA4;
 						ProvisioningStyle = Automatic;
 					};
 					B12DB8AF1F54F58F0006315D = {
@@ -510,7 +511,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = J2B9KUWDA4;
 				INFOPLIST_FILE = CGAttributedLabel/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = XL.CGAttributedLabel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -521,7 +524,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = J2B9KUWDA4;
 				INFOPLIST_FILE = CGAttributedLabel/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = XL.CGAttributedLabel;
 				PRODUCT_NAME = "$(TARGET_NAME)";

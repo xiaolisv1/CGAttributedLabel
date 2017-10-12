@@ -81,11 +81,11 @@
 
 -(id)replaceCharactersInWXAttributedLabel:(CGAttributedLabel *)attributedLabel index:(NSInteger)index{
     if (index == 1) {
-        UIButton *textField = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, 90, 25)];
-        textField.backgroundColor = [UIColor blackColor];
+        UITextField *textField = [[UITextField alloc]initWithFrame:CGRectMake(0, 0, 90, 25)];
+        textField.backgroundColor = [UIColor redColor];
         return textField ;
     }
-    NSString * answer = @"how are you !" ;
+    NSString * answer = @"how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !how are you !" ;
     NSString * myanswer = @"how do you do ! yes i am no no no ." ;
     NSMutableAttributedString *answerAttributedString ;
     
@@ -97,7 +97,6 @@
          */
         [answerAttributedString addAttribute:RUNATTRIBUTE_DELETE_LINE_KEY value:RUNATTRIBUTE_DELETE_LINE_VALUE range:NSMakeRange(answer.length+1, myanswer.length)] ;
         [answerAttributedString addAttribute:RUNATTRIBUTE_YESORNO_KEY value:[UIColor redColor] range:NSMakeRange(0, answerAttributedString.length)];
-        
         [answerAttributedString addAttribute:NSForegroundColorAttributeName value:[UIColor greenColor] range:NSMakeRange(0, answer.length)];
         [answerAttributedString addAttribute:NSForegroundColorAttributeName value:[UIColor redColor] range:NSMakeRange(answer.length +1 , myanswer.length)];
     }else{

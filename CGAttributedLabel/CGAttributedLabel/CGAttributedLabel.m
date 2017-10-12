@@ -8,12 +8,20 @@
 
 #import "CGAttributedLabel.h"
 #import <CoreText/CoreText.h>
+
+@implementation LineModel
+
+@end
+
+
 @interface CGAttributedLabel()
 @property (nonatomic ,assign)CGSize viewSize ;
 @property (nonatomic ,strong)NSMutableArray * viewsArray ;
 @property (nonatomic ,strong)NSMutableArray * rectssArray ;
 @property (nonatomic ,assign)CGRect touchrec ;
 @property (nonatomic ,copy)NSString * cilckstr ;
+/** @brief 拖拽手势 */
+@property (nonatomic ,strong) UIPanGestureRecognizer *pan ;
 @end
 @implementation CGAttributedLabel
 
@@ -79,14 +87,16 @@
     
     
     NSArray * bottomLineRects =  [self calculateImagePositionInCTFrame:frame runAttributesKey:RUNATTRIBUTE_BOTTOM_LINE_KEY runAttributesValue:RUNATTRIBUTE_BOTTOM_LINE_VALUE] ;
+    
     _rectssArray = [NSMutableArray arrayWithArray:bottomLineRects];
     UIColor *lcolor = [UIColor colorWithRed:arc4random()%255/255.0 green:arc4random()%255/255.0 blue:arc4random()%255/255.0 alpha:1.0] ;
    // UIColor *bcolor = [UIColor colorWithRed:arc4random()%255/255.0 green:arc4random()%255/255.0 blue:arc4random()%255/255.0 alpha:1.0];
-    [bottomLineRects enumerateObjectsUsingBlock:^(NSDictionary *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        CGRect rect = [obj[@"r"] CGRectValue];
-        CGRect bfre = [obj[@"rere"] CGRectValue] ;
+    [bottomLineRects enumerateObjectsUsingBlock:^(LineModel *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+//        @{@"c":lineColor,@"r":[NSValue valueWithCGRect:delegateBounds],@"v":runAttributes[@"2121"],@"tag":runAttributes[@"model"],@"rere":[NSValue valueWithCGRect:bgrunbouns]}
+        CGRect rect = obj.delegateBounds;
+        CGRect bfre = obj.bgrunbouns;
         CGRect rect1 = CGRectMake(bfre.origin.x, bfre.origin.y-self.lineSpacinge, bfre.size.width, bfre.size.height+self.lineSpacinge * 2);
-        if (_cilckstr != nil && [_cilckstr isEqualToString:obj[@"tag"]]) {
+        if (_cilckstr != nil && [_cilckstr isEqualToString:obj.idfanier]) {
             
             //创建路径并获取句柄
             CGMutablePathRef path = CGPathCreateMutable();
@@ -109,7 +119,7 @@
         CGFloat width = self.bottomLineWith>0?self.bottomLineWith:1;
         CGContextSetLineWidth(context, width);
         
-        UIColor * color = obj[@"c"] ;
+        UIColor * color = obj.lineColor;
         CGContextSetStrokeColorWithColor(context, color.CGColor);
         
         CGContextMoveToPoint(context, rect.origin.x, rect.origin.y-self.lineSpacinge);
@@ -133,9 +143,9 @@
     
     NSArray * deleteLineRects =  [self calculateImagePositionInCTFrame:frame runAttributesKey:RUNATTRIBUTE_DELETE_LINE_KEY runAttributesValue:RUNATTRIBUTE_DELETE_LINE_VALUE] ;
     
-    [deleteLineRects enumerateObjectsUsingBlock:^(NSDictionary *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        CGRect rect = [obj[@"r"] CGRectValue];
-        UIColor * color = obj[@"c"] ;
+    [deleteLineRects enumerateObjectsUsingBlock:^(LineModel *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        CGRect rect = obj.delegateBounds;
+        UIColor * color = obj.lineColor ;
         CGContextSetStrokeColorWithColor(context, color.CGColor);
         CGContextMoveToPoint(context, rect.origin.x, rect.origin.y + rect.size.height/2.0);
         CGContextAddLineToPoint(context, rect.origin.x+rect.size.width, rect.origin.y + rect.size.height/2.0);
@@ -151,8 +161,36 @@
     if (self = [super initWithFrame:frame]) {
         self.numberOfLines = 0 ;
         self.userInteractionEnabled = YES ;
+        _pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panAction:)];
     }
     return self ;
+}
+
+//拖拽
+- (void)panAction:(UIPanGestureRecognizer *)pan{
+    
+    CGPoint point = [pan locationInView:self];
+    if (pan.state == UIGestureRecognizerStateBegan) {
+        
+    }
+    if (pan.state == UIGestureRecognizerStateEnded) {
+        CGPoint location = [self systemPointFromScreenPoint:point];
+        [self.rectssArray enumerateObjectsUsingBlock:^(LineModel *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            CGRect rect = obj.delegateBounds;
+            CGRect rect1 = CGRectMake(rect.origin.x, rect.origin.y-self.lineSpacinge, rect.size.width, rect.size.height+self.lineSpacinge);
+            if ([self isFrame:rect1 containsPoint:location]) {
+                _touchrec = rect1 ;
+                NSMutableAttributedString * add = [[NSMutableAttributedString alloc]initWithAttributedString:self.attributedText];
+                NSAttributedString * cilckAtt = [add attributedSubstringFromRange:obj.range];
+                [add addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithRed:arc4random()%255/255.0 green:arc4random()%255/255.0 blue:arc4random()%255/255.0 alpha:1.0] range:obj.range];
+                _cilckstr = obj.idfanier;
+                self.attributedText = add ;
+                NSLog(@"您点击到了下划线文字-----%@",cilckAtt.string);
+                *stop = YES ;
+            }
+        }];
+        [self removeGestureRecognizer:self.pan];
+    }
 }
 
 
@@ -183,47 +221,15 @@
         _viewsArray = [NSMutableArray array];
         [htmlStringArray enumerateObjectsUsingBlock:^(NSString *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
             
-            NSString * idfanierStr = [NSString stringWithFormat:@"rag=%lu",(unsigned long)idx];
+            NSString * idfanierStr = [NSString stringWithFormat:@"%lu",(unsigned long)idx];
             
             if (idx < htmlStringArray.count-1) {
                 NSMutableAttributedString * lll = [[NSMutableAttributedString alloc] initWithString:obj attributes:nil] ;
-                
-                [lll addAttribute:@"model" value:idfanierStr range:NSMakeRange(0, lll.length)];
+                [lll addAttribute:@"idfanier" value:idfanierStr range:NSMakeRange(0, lll.length)];
+                [lll addAttribute:@"cgrange" value:[NSValue valueWithRange:NSMakeRange(textAttributedString.length, lll.length)] range:NSMakeRange(0, lll.length)];
                 [textAttributedString appendAttributedString:lll];
+                [self addDelegateValue:textAttributedString idx:idx idfanierStr:idfanierStr];
                 
-                id obj = [self.delegate replaceCharactersInWXAttributedLabel:self index:idx];
-                if ([obj isKindOfClass:[NSMutableAttributedString class]] || [obj isKindOfClass:[NSAttributedString class]]) {
-                    NSMutableAttributedString * ddd = [self.delegate replaceCharactersInWXAttributedLabel:self index:idx] ;
-                    [ddd addAttribute:@"model" value:idfanierStr range:NSMakeRange(0, ddd.length)];
-                    [textAttributedString appendAttributedString:ddd];
-                }else{
-                    UIView * view = [self.delegate replaceCharactersInWXAttributedLabel:self index:idx];
-                    //selfview = view ;
-                    // CTRunDelegateCallbacks：一个用于保存指针的结构体，由CTRun delegate进行回调
-                    CTRunDelegateCallbacks callbacks;
-                    memset(&callbacks, 0, sizeof(CTRunDelegateCallbacks));
-                    callbacks.version = kCTRunDelegateVersion1;
-                    callbacks.getAscent = ascentCallback;
-                    callbacks.getDescent = descentCallback;
-                    callbacks.getWidth = widthCallback;
-                    callbacks.dealloc  = deallocCallback;
-                    
-                    //    NSString * ww = [NSString stringWithFormat:@"%@",sss];
-                    
-                    // 设置CTRun的代理
-                    CTRunDelegateRef delegate = CTRunDelegateCreate(&callbacks,(__bridge void * _Nullable)(view));
-                    
-                    //   [textAttributedString addAttribute:(__bridge_transfer NSString *)kCTRunDelegateAttributeName value:(__bridge id)runDelegate range: CFRangeMake(textAttributedString, 1)];
-                    //run
-                    unichar objectReplacementChar = 0xFFFC;
-                    NSString *content = [NSString stringWithCharacters:&objectReplacementChar length:1];
-                    NSMutableAttributedString *space = [[NSMutableAttributedString alloc] initWithString:content];
-                    CFAttributedStringSetAttribute((CFMutableAttributedStringRef)space, CFRangeMake(0, 1), kCTRunDelegateAttributeName, delegate);
-                    CFRelease(delegate);
-                    [textAttributedString appendAttributedString:space];
-                    
-                    [_viewsArray addObject:view];
-                }
             }else{
                 [textAttributedString appendAttributedString:[[NSMutableAttributedString alloc] initWithString:obj attributes:nil]];
             }
@@ -247,6 +253,43 @@
         self.attributedText = htmlAttributedString ;
     }
     
+}
+
+-(void)addDelegateValue:(NSMutableAttributedString *)textAttributedString idx:(NSInteger)idx idfanierStr:(NSString *)idfanierStr{
+    id obj = [self.delegate replaceCharactersInWXAttributedLabel:self index:idx];
+    if ([obj isKindOfClass:[NSMutableAttributedString class]] || [obj isKindOfClass:[NSAttributedString class]]) {
+        NSMutableAttributedString * ddd = [self.delegate replaceCharactersInWXAttributedLabel:self index:idx] ;
+        [ddd addAttribute:@"idfanier" value:idfanierStr range:NSMakeRange(0, ddd.length)];
+        [ddd addAttribute:@"cgrange" value:[NSValue valueWithRange:NSMakeRange(textAttributedString.length, ddd.length)] range:NSMakeRange(0, ddd.length)];
+        [textAttributedString appendAttributedString:ddd];
+    }else{
+        UIView * view = [self.delegate replaceCharactersInWXAttributedLabel:self index:idx];
+        //selfview = view ;
+        // CTRunDelegateCallbacks：一个用于保存指针的结构体，由CTRun delegate进行回调
+        CTRunDelegateCallbacks callbacks;
+        memset(&callbacks, 0, sizeof(CTRunDelegateCallbacks));
+        callbacks.version = kCTRunDelegateVersion1;
+        callbacks.getAscent = ascentCallback;
+        callbacks.getDescent = descentCallback;
+        callbacks.getWidth = widthCallback;
+        callbacks.dealloc  = deallocCallback;
+        
+        //    NSString * ww = [NSString stringWithFormat:@"%@",sss];
+        
+        // 设置CTRun的代理
+        CTRunDelegateRef delegate = CTRunDelegateCreate(&callbacks,(__bridge void * _Nullable)(view));
+        
+        //   [textAttributedString addAttribute:(__bridge_transfer NSString *)kCTRunDelegateAttributeName value:(__bridge id)runDelegate range: CFRangeMake(textAttributedString, 1)];
+        //run
+        unichar objectReplacementChar = 0xFFFC;
+        NSString *content = [NSString stringWithCharacters:&objectReplacementChar length:1];
+        NSMutableAttributedString *space = [[NSMutableAttributedString alloc] initWithString:content];
+        CFAttributedStringSetAttribute((CFMutableAttributedStringRef)space, CFRangeMake(0, 1), kCTRunDelegateAttributeName, delegate);
+        CFRelease(delegate);
+        [textAttributedString appendAttributedString:space];
+        
+        [_viewsArray addObject:view];
+    }
 }
 #pragma mark - CTRun delegate 回调方法
 void deallocCallback(void* refCon ){
@@ -275,7 +318,7 @@ static CGFloat widthCallback(void *ref) {
     if ([(__bridge id)ref isKindOfClass:[UIView class]])
     {
         UIView * view = (__bridge UIView *)ref ;
-        return view.frame.size.width+5000 ;
+        return view.frame.size.width ;
     }
     return 0;
 }
@@ -284,21 +327,40 @@ static CGFloat widthCallback(void *ref) {
     UITouch * touch = [touches anyObject];
     CGPoint location = [self systemPointFromScreenPoint:[touch locationInView:self]];
     
-    [self.rectssArray enumerateObjectsUsingBlock:^(NSDictionary *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        CGRect rect = [obj[@"r"] CGRectValue];
+    [self.rectssArray enumerateObjectsUsingBlock:^(LineModel *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        CGRect rect = obj.delegateBounds;
         CGRect rect1 = CGRectMake(rect.origin.x, rect.origin.y-self.lineSpacinge, rect.size.width, rect.size.height+self.lineSpacinge);
         if ([self isFrame:rect1 containsPoint:location]) {
             _touchrec = rect1 ;
-            NSMutableAttributedString * add = [[NSMutableAttributedString alloc]initWithAttributedString:self.attributedText];
-            NSRange rr = [self.attributedText.string rangeOfString:obj[@"v"]] ;
-            [add addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithRed:arc4random()%255/255.0 green:arc4random()%255/255.0 blue:arc4random()%255/255.0 alpha:1.0] range:rr];
-            _cilckstr = obj[@"tag"];
-            self.attributedText = add ;
-            NSLog(@"您点击到了下划线文字-----%@",obj[@"v"]);
+            [self addGestureRecognizer:self.pan];
             *stop = YES ;
         }
     }];
     
+}
+
+-(void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    
+}
+
+-(void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    UITouch * touch = [touches anyObject];
+    CGPoint location = [self systemPointFromScreenPoint:[touch locationInView:self]];
+    [self removeGestureRecognizer:self.pan];
+    [self.rectssArray enumerateObjectsUsingBlock:^(LineModel *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        CGRect rect = obj.delegateBounds;
+        CGRect rect1 = CGRectMake(rect.origin.x, rect.origin.y-self.lineSpacinge, rect.size.width, rect.size.height+self.lineSpacinge);
+        if ([self isFrame:rect1 containsPoint:location]) {
+            _touchrec = rect1 ;
+            NSMutableAttributedString * add = [[NSMutableAttributedString alloc]initWithAttributedString:self.attributedText];
+            NSAttributedString * cilckAtt = [add attributedSubstringFromRange:obj.range];
+            [add addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithRed:arc4random()%255/255.0 green:arc4random()%255/255.0 blue:arc4random()%255/255.0 alpha:1.0] range:obj.range];
+            _cilckstr = obj.idfanier;
+            self.attributedText = add ;
+            NSLog(@"您点击到了下划线文字-----%@",cilckAtt.string);
+            *stop = YES ;
+        }
+    }];
 }
 
 //-(void)ClickOnStrWithPoint:(CGPoint)location
@@ -434,7 +496,14 @@ static CGFloat widthCallback(void *ref) {
                 CGRect colRect = CGPathGetBoundingBox(pathRef);
                 CGRect delegateBounds = CGRectOffset(runBounds, colRect.origin.x, colRect.origin.y);
                 
-                [array addObject:@{@"c":lineColor,@"r":[NSValue valueWithCGRect:delegateBounds],@"v":runAttributes[@"2121"],@"tag":runAttributes[@"model"],@"rere":[NSValue valueWithCGRect:bgrunbouns]}];
+                LineModel * model = [[LineModel alloc]init];
+                model.lineColor = lineColor ;
+                model.delegateBounds = delegateBounds ;
+                NSValue * va = runAttributes[@"cgrange"] ;
+                model.range = [va rangeValue];
+                model.bgrunbouns = bgrunbouns ;
+                model.idfanier = runAttributes[@"idfanier"] ;
+                [array addObject:model];
             }
             
         }
